@@ -1,42 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Simple Page with Buttons</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 100px;
-        }
-        h1 {
-            font-size: 32px;
-            color: #333;
-        }
-        button {
-            margin: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Students Log</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #e8f0ff, #cfe4ff);
+        color: #333;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100vh;
+    }
+    h1 {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        color: #2a66c8;
+    }
+    p {
+        font-size: 1.2rem;
+        margin-bottom: 40px;
+        opacity: 0.9;
+    }
+    .button-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        max-width: 250px;
+        margin: auto;
+    }
+    a {
+        text-decoration: none;
+    }
+    button {
+        padding: 15px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        background-color: #2a66c8;
+        color: white;
+        transition: transform 0.2s, background-color 0.3s;
+    }
+    button:hover {
+        transform: scale(1.05);
+        background-color: #1f4ea0;
+    }
+</style>
 </head>
 <body>
 
-    <h1>EXAM RESULT</h1>
+    <h1>Students Log</h1>
+    <p>Manage Redbook names and send exam marks with ease.</p>
 
-    <button onclick="window.location.href='JEE.html'">JEE</button>
-    <button onclick="window.location.href='NEET.html'">NEET</button>
-
-    <script>
-        function buttonOneAction() {
-            alert("Button One clicked!");
-        }
-
-        function buttonTwoAction() {
-            alert("Button Two clicked!");
-        }
-    </script>
+    <div class="button-container">
+        <a href="Redbook.html"><button>Add Names</button></a>
+        <a href="examresult.html"><button>Send Marks</button></a>
+    </div>
 
 </body>
 </html>
