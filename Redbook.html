@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Shuffler – Redbook Edition</title>
+<style>
+    body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #e8f0ff, #cfe4ff);
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+header {
+    text-align: center;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #2a66c8;
+}
+main {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+.upload-section, .input-section, .button-section {
+    margin: 20px 0;
+    padding: 15px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+input[type="file"], input[type="number"] {
+    margin: 5px 0;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+button {
+    background: #2a66c8;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 10px;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+button:hover {
+    background: #1f4ea0;
+}
+.groups {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+.group {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 10px;
+}
+.group h3 {
+    margin-top: 0;
+    text-align: center;
+    color: #2a66c8;
+}
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+li {
+    padding: 4px 0;
+    border-bottom: 1px solid #f1f1f1;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+}
+.download-buttons {
+    text-align: center;
+    margin-top: 20px;
+}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>Shuffler – Redbook Edition</h1>
+</header>
+
+<main>
+    <div class="upload-section">
+        <label><strong>Upload Girls TXT:</strong></label><br>
+        <input type="file" id="girlsFile" accept=".txt"><br>
+        <label><strong>Upload Boys TXT:</strong></label><br>
+        <input type="file" id="boysFile" accept=".txt">
+    </div>
+
+    <div class="input-section">
+        <label>Girls per group:</label><br>
+        <input type="number" id="girlsPerGroup" min="0"><br>
+        <label>Boys per group:</label><br>
+        <input type="number" id="boysPerGroup" min="0">
+    </div>
+
+    <div class="button-section">
+        <button onclick="makeGroups()">Make Groups</button>
+    </div>
+
+    <div id="groupsContainer" class="groups"></div>
+
+    <div class="download-buttons" id="downloadSection" style="display:none;">
+        <button onclick="downloadFile(remainingGirls, 'girls')">Download Remaining Girls</button>
+        <button onclick="downloadFile(remainingBoys, 'boys')">Download Remaining Boys</button>
+        <button onclick="takeScreenshot()">Take Screenshot</button>
+    </div>
+</main>
+
+<script>
+let girlsList = [];
+let boysList = [];
+let remainingGirls = [];
+let remainingBoys = [];
+
+document.getElementById('girlsFile').addEventListener('change', function(e) {
+    readFile(e.target.files[0], list => girlsList = list);
+});
+document.getElementById('boysFile').addEventListener('change', function(e) {
+    readFile(e.target.files[0], list => boysList = list);
+});
+
+function readFile(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const lines = e.target.result.split(/\r?\n/).filter(line => line.trim() !== '');
+        callback(lines);
+    }
+    reader.readAsText(file);
+}
+
+function shuffleArray(array) {
+    let arr = array.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function makeGroups() {
+    let girlsPer = parseInt(document.getElementById('girlsPerGroup').value) || 0;
+    let boysPer = parseInt(document.getElementById('boysPerGroup').value) || 0;
+    let totalPerGroup = girlsPer + boysPer;
+    let groups = [[], [], [], []];
+
+    let shuffledGirls = shuffleArray(girlsList);
+    let shuffledBoys = shuffleArray(boysList);
+
+    for (let g = 0; g < 4; g++) {
+        let groupGirls = shuffledGirls.splice(0, girlsPer);
+        let groupBoys = shuffledBoys.splice(0, boysPer);
+        groups[g] = groupGirls.concat(groupBoys);
+    }
+
+    remainingGirls = shuffledGirls;
+    remainingBoys = shuffledBoys;
+
+    displayGroups(groups);
+    document.getElementById('downloadSection').style.display = 'block';
+}
+
+function displayGroups(groups) {
+    let container = document.getElementById('groupsContainer');
+    container.innerHTML = '';
+    groups.forEach((group, index) => {
+        let groupDiv = document.createElement('div');
+        groupDiv.className = 'group';
+        let title = document.createElement('h3');
+        title.textContent = 'Group ' + (index + 1);
+        groupDiv.appendChild(title);
+        let list = document.createElement('ul');
+        group.forEach(name => {
+            let li = document.createElement('li');
+            li.textContent = name;
+            list.appendChild(li);
+        });
+        groupDiv.appendChild(list);
+        container.appendChild(groupDiv);
+    });
+}
+
+function downloadFile(list, type) {
+    let tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    let dateStr = tomorrow.toISOString().split('T')[0];
+    let filename = `${dateStr}_${type}.txt`;
+    let blob = new Blob([list.join('\n')], {type: 'text/plain'});
+    let link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+}
+function takeScreenshot() {
+    let groupsElement = document.getElementById('groupsContainer');
+    html2canvas(groupsElement).then(canvas => {
+        let link = document.createElement('a');
+        link.download = 'groups_screenshot.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+}
+  
+</script>
+
+</body>
+</html>
