@@ -3,34 +3,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Exam Message Generator — Excel → WhatsApp</title>
-
-  <!-- Styles -->
+  <title>Exam Message Generator — Fixed Skip Rows</title>
   <style>
-    :root{
-      --accent: #2563eb;
-      --muted: #6b7280;
-      --bg: #f3f6fb;
-      --card: #ffffff;
-    }
+    :root{--accent:#2563eb;--muted:#6b7280;--bg:#f3f6fb;--card:#fff}
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: Inter, system-ui, Arial, sans-serif;
-      background:var(--bg);
-      color:#0f172a;
-      padding:20px;
-    }
+    body{margin:0;padding:20px;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:#0f172a}
     .container{max-width:1100px;margin:0 auto}
     header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
     h1{font-size:20px;margin:0}
-    .top-controls{display:flex;gap:12px;align-items:center;margin-left:auto}
     .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.06);margin-bottom:14px}
     label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-    input[type="text"], input[type="number"], select{
-      width:100%;padding:8px;border-radius:8px;border:1px solid #e6eefc;
-      font-size:14px;background:#fbfdff;
-    }
+    input[type="text"], input[type="number"], select{width:100%;padding:8px;border-radius:8px;border:1px solid #e6eefc;font-size:14px;background:#fbfdff}
     input[type="file"]{font-size:14px}
     .row{display:flex;gap:12px;align-items:center}
     .row.colwrap{flex-wrap:wrap}
@@ -40,25 +23,15 @@
     .btn.positive{background:#16a34a}
     .btn.danger{background:#ef4444}
     .small{font-size:13px;color:var(--muted)}
-    /* mapping area */
-    .mapping{
-      display:flex;flex-direction:column;gap:10px;
-    }
+    .mapping{display:flex;flex-direction:column;gap:10px;}
     .mapping-head{display:flex;gap:10px;align-items:center;justify-content:space-between}
     .subjects-area{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-    .subject-row{
-      display:flex;gap:8px;align-items:center;background:#fbfdff;padding:8px;border-radius:8px;border:1px solid #eef3ff;
-    }
+    .subject-row{display:flex;gap:8px;align-items:center;background:#fbfdff;padding:8px;border-radius:8px;border:1px solid #eef3ff}
     .subject-row .col{min-width:120px}
     .subject-row .col.small{min-width:80px}
     .subject-row button{padding:6px 8px;border-radius:8px}
-    /* preview */
-    .preview{
-      display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;
-    }
-    .preview-card{
-      width:540px;border-radius:12px;padding:18px;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 8px 24px rgba(2,6,23,0.06);
-    }
+    .preview{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .preview-card{width:540px;border-radius:12px;padding:18px;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 8px 24px rgba(2,6,23,0.06)}
     .preview-card h2{margin:0 0 8px;font-size:18px}
     .preview-meta{color:var(--muted);margin-bottom:8px}
     .subject-list{margin-top:10px}
@@ -66,21 +39,17 @@
     .actions{display:flex;gap:8px;margin-top:12px}
     pre#rawMessage{background:#fff;padding:12px;border-radius:8px;min-height:80px;overflow:auto}
     .hint{font-size:13px;color:var(--muted)}
-    @media (max-width:920px){
-      .preview-card{width:100%}
-    }
+    @media (max-width:920px){.preview-card{width:100%}}
+    .muted-note{font-size:13px;color:var(--muted);margin-top:8px}
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <h1>Exam Message Generator</h1>
-      <div class="top-controls">
-        <div class="small">Students loaded: <span id="count">0</span></div>
-      </div>
+      <div style="margin-left:auto" class="small">Students loaded: <span id="count">0</span></div>
     </header>
 
-    <!-- upload + exam name -->
     <div class="card">
       <div class="row colwrap">
         <div class="col">
@@ -88,35 +57,44 @@
           <input id="excelFile" type="file" accept=".xlsx,.xls" />
         </div>
 
-        <div class="col">
-          <label>Exam Name (editable)</label>
-          <input id="examName" type="text" value="CHAPTERWISE DESCRIPTIVE EXAMINATION-1" />
+        <div style="min-width:200px;">
+          <label>Select Sheet</label>
+          <select id="sheetSelect"><option value="">(upload file first)</option></select>
         </div>
 
-        <div style="min-width:140px;">
-          <label class="small">Actions</label>
-          <div style="display:flex;gap:8px;">
-            <button id="generateBtn" class="btn">Generate Messages</button>
-            <button id="clearBtn" class="btn secondary">Clear</button>
+        <div style="min-width:160px;">
+          <label>Skip top rows</label>
+          <input id="skipRows" type="number" min="0" value="0" />
+        </div>
+
+        <div style="min-width:170px;">
+          <label>&nbsp;</label>
+          <div style="display:flex;gap:8px">
+            <button id="autoDetectBtn" class="btn secondary">Auto-detect header</button>
+            <button id="reloadSheetBtn" class="btn secondary">Apply</button>
           </div>
         </div>
+
+        <div class="col">
+          <label>Exam Name</label>
+          <input id="examName" type="text" value="CHAPTERWISE DESCRIPTIVE EXAMINATION-1" />
+        </div>
       </div>
-      <div class="hint" style="margin-top:8px">
-        After upload: choose <strong>Name column</strong> and <strong>Phone column</strong>, then add subject rows (Add Subject button).
-      </div>
+
+      <div class="muted-note">Set "Skip top rows" to the number of rows above your header (e.g., if header is row 4, enter 3). Use Auto-detect to detect a probable header row automatically.</div>
     </div>
 
-    <!-- mapping -->
     <div class="card mapping">
       <div class="mapping-head">
         <div style="display:flex;gap:12px;align-items:center">
-          <div>
+          <div style="min-width:220px">
             <label>Name Column</label>
-            <select id="nameColumn"><option value="">(upload excel first)</option></select>
+            <select id="nameColumn"><option value="">(upload sheet first)</option></select>
           </div>
-          <div>
-            <label>Phone Column (WhatsApp)</label>
-            <select id="phoneColumn"><option value="">(upload excel first)</option></select>
+
+          <div style="min-width:220px">
+            <label>Phone Column (optional)</label>
+            <select id="phoneColumn"><option value="">(upload sheet first)</option></select>
           </div>
         </div>
 
@@ -125,41 +103,33 @@
         </div>
       </div>
 
-      <div class="subjects-area" id="subjectsArea">
-        <!-- subject rows appended here -->
-      </div>
-
-      <div class="small" style="margin-top:8px;color:var(--muted)">
-        Each subject row: choose Excel column → give Subject Name (e.g., CHEMISTRY) → set Total marks (e.g., 15). Leave a subject row unselected to ignore it.
-      </div>
+      <div class="subjects-area" id="subjectsArea"></div>
+      <div class="small" style="margin-top:8px;color:var(--muted)">Each subject row: choose Excel column → Subject Name → Total marks. Leave a subject row unselected to ignore it.</div>
     </div>
 
-    <!-- preview -->
     <div class="preview">
       <div class="preview-card card" id="previewCard">
         <h2 id="previewHeading">CHAPTERWISE DESCRIPTIVE EXAMINATION-1</h2>
         <div class="preview-meta" id="previewMeta">Name : </div>
 
-        <div class="subject-list" id="previewSubjects">
-          <!-- subject lines -->
-        </div>
+        <div class="subject-list" id="previewSubjects"></div>
 
         <div class="actions">
           <button id="prevBtn" class="btn secondary">Previous</button>
           <button id="nextBtn" class="btn secondary">Next</button>
           <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
             <button id="copyTextBtn" class="btn">Copy Text</button>
-            <button id="sendWhatsappBtn" class="btn positive">Send (Open WhatsApp)</button>
+            <button id="sendWhatsappBtn" class="btn positive">Send (WhatsApp)</button>
           </div>
         </div>
 
-        <div class="hint" style="margin-top:8px">Note: WhatsApp opens with text pre-filled; press Send manually in WhatsApp.</div>
+        <div class="hint" style="margin-top:8px">WhatsApp opens with text pre-filled; press Send manually in WhatsApp.</div>
       </div>
 
       <div style="flex:1;min-width:300px;">
         <div class="card">
           <h3 style="margin-top:0">Raw message preview</h3>
-          <pre id="rawMessage">(generate to see)</pre>
+          <pre id="rawMessage">(upload sheet to see preview)</pre>
         </div>
 
         <div class="card">
@@ -169,10 +139,322 @@
       </div>
     </div>
 
-    <!-- include SheetJS so the separate script can use it -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <!-- script.js (will be provided separately) -->
-    <script src="script.js"></script>
+    <div class="muted-note">If things still look off, try Auto-detect header and then press Apply. Auto-detect will overwrite the Skip value only when you press it intentionally.</div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <script>
+  (function(){
+    let workbook = null;
+    let excelData = [];
+    let columns = [];
+    let currentIndex = 0;
+
+    // DOM
+    const fileInput = document.getElementById('excelFile');
+    const sheetSelect = document.getElementById('sheetSelect');
+    const skipRowsInput = document.getElementById('skipRows');
+    const autoDetectBtn = document.getElementById('autoDetectBtn');
+    const reloadSheetBtn = document.getElementById('reloadSheetBtn');
+    const nameColumnSelect = document.getElementById('nameColumn');
+    const phoneColumnSelect = document.getElementById('phoneColumn');
+    const subjectsArea = document.getElementById('subjectsArea');
+    const examNameInput = document.getElementById('examName');
+    const previewHeading = document.getElementById('previewHeading');
+    const previewMeta = document.getElementById('previewMeta');
+    const previewSubjects = document.getElementById('previewSubjects');
+    const rawMessage = document.getElementById('rawMessage');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const sendWhatsappBtn = document.getElementById('sendWhatsappBtn');
+    const addSubjectBtn = document.getElementById('addSubjectBtn');
+    const copyTextBtn = document.getElementById('copyTextBtn');
+    const studentList = document.getElementById('studentList');
+    const countSpan = document.getElementById('count');
+
+    fileInput.addEventListener('change', handleFile);
+    sheetSelect.addEventListener('change', () => { if (workbook) loadSheet(sheetSelect.value); });
+    reloadSheetBtn.addEventListener('click', () => { if (workbook) loadSheet(sheetSelect.value); });
+    autoDetectBtn.addEventListener('click', autoDetectHeader);
+
+    function handleFile(e){
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        const data = new Uint8Array(ev.target.result);
+        workbook = XLSX.read(data, { type: 'array' });
+
+        // fill sheet select
+        sheetSelect.innerHTML = '';
+        workbook.SheetNames.forEach((name,i) => {
+          const opt = document.createElement('option'); opt.value = name; opt.textContent = name;
+          if (i === 0) opt.selected = true;
+          sheetSelect.appendChild(opt);
+        });
+
+        // load using whatever skipRowsInput.value currently is (do NOT overwrite it)
+        loadSheet(sheetSelect.value);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function autoDetectHeader(){
+      if (!workbook) { alert('Upload an Excel file first'); return; }
+      const sheet = workbook.Sheets[sheetSelect.value];
+      if (!sheet) return;
+      const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval: "" });
+
+      // find likely header index: prefer a row with >=2 non-empty cells or row containing keywords
+      function isHeaderRow(row) {
+        if (!row) return false;
+        const trimmed = row.map(c => String(c).trim());
+        const nonEmpty = trimmed.filter(c => c !== "").length;
+        if (nonEmpty >= 2) return true;
+        if (trimmed.some(c => /name|student|roll|id|phone|mobile|marks|score/i.test(c))) return true;
+        return false;
+      }
+
+      let idx = rows.findIndex(r => isHeaderRow(r));
+      if (idx === -1) {
+        // fallback: first row with any non-empty cell
+        idx = rows.findIndex(r => r && r.some(c => String(c).trim() !== ""));
+      }
+
+      if (idx === -1) {
+        alert('Could not auto-detect a header row in this sheet.');
+        return;
+      }
+
+      skipRowsInput.value = idx; // user explicitly asked for auto-detect, so update the skip value
+      loadSheet(sheetSelect.value);
+    }
+
+    function loadSheet(sheetName){
+      if (!workbook) return;
+      const sheet = workbook.Sheets[sheetName];
+      if (!sheet) return;
+
+      // read raw rows
+      const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval: "" });
+
+      // parse skip value but DO NOT overwrite user input here
+      let skip = parseInt(skipRowsInput.value, 10);
+      if (isNaN(skip) || skip < 0) skip = 0;
+
+      if (skip >= rows.length) {
+        alert('Skip value is larger than sheet row count. Reduce Skip top rows and press Apply.');
+        return; // do not change skipRowsInput.value
+      }
+
+      const headerRow = rows[skip] || [];
+      const headerEmpty = !headerRow || headerRow.every(cell => String(cell).trim() === "");
+      if (headerEmpty) {
+        // user-provided skip points to an empty row — don't overwrite input, just inform
+        excelData = [];
+        columns = [];
+        currentIndex = 0;
+        populateColumnSelects(); // clears selects
+        updateStudentList();
+        updatePreview();
+        countSpan.textContent = 0;
+        rawMessage.textContent = '(no header found at chosen row)';
+        return;
+      }
+
+      // normalize header names and ensure uniqueness
+      const seen = {};
+      const headerNames = headerRow.map((c, idx) => {
+        let name = String(c).trim();
+        if (!name) name = `Column${idx+1}`;
+        if (seen[name]) {
+          seen[name] += 1;
+          name = `${name} (${seen[name]})`;
+        } else {
+          seen[name] = 1;
+        }
+        return name;
+      });
+
+      // data rows begin after header row
+      const dataRows = rows.slice(skip + 1);
+
+      // map rows to objects using headerNames
+      excelData = dataRows.map(r => {
+        const obj = {};
+        headerNames.forEach((colName, i) => {
+          obj[colName] = (r && typeof r[i] !== 'undefined') ? r[i] : "";
+        });
+        return obj;
+      }).filter(row => {
+        // drop completely empty rows
+        return Object.values(row).some(v => String(v).trim() !== "");
+      });
+
+      columns = headerNames.slice();
+      currentIndex = 0;
+
+      populateColumnSelects();   // updates name/phone selects and retains previous selection when possible
+      populateSubjectRowSelects(); // refresh subject-row selects to match new columns
+      updateStudentList();
+      updatePreview();
+      countSpan.textContent = excelData.length;
+    }
+
+    function populateColumnSelects(){
+      const prevName = nameColumnSelect.value;
+      const prevPhone = phoneColumnSelect.value;
+
+      // reset
+      [nameColumnSelect, phoneColumnSelect].forEach(sel => {
+        sel.innerHTML = "";
+        const blank = document.createElement('option'); blank.value = ""; blank.textContent = "(none)";
+        sel.appendChild(blank);
+      });
+
+      if (!columns || !columns.length) return;
+
+      columns.forEach(col => {
+        const o1 = document.createElement('option'); o1.value = col; o1.textContent = col;
+        const o2 = document.createElement('option'); o2.value = col; o2.textContent = col;
+        nameColumnSelect.appendChild(o1);
+        phoneColumnSelect.appendChild(o2);
+      });
+
+      // restore previous selections if still present
+      if (prevName && columns.includes(prevName)) nameColumnSelect.value = prevName;
+      if (prevPhone && columns.includes(prevPhone)) phoneColumnSelect.value = prevPhone;
+    }
+
+    function populateSubjectRowSelects(){
+      // for each existent subject-row, update its column select options and try to keep previous value
+      const rows = subjectsArea.querySelectorAll('.subject-row');
+      rows.forEach(row => {
+        const sel = row.querySelector('select');
+        const prev = sel.value;
+        sel.innerHTML = "";
+        columns.forEach(c => {
+          const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
+        });
+        if (prev && columns.includes(prev)) sel.value = prev;
+      });
+    }
+
+    addSubjectBtn.addEventListener('click', () => {
+      if (!columns || !columns.length) { alert('Upload sheet and ensure header is detected first'); return; }
+      const rowDiv = document.createElement('div'); rowDiv.className = 'subject-row';
+
+      const colSel = document.createElement('select');
+      columns.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; colSel.appendChild(o); });
+
+      const subjNameInput = document.createElement('input'); subjNameInput.type = 'text'; subjNameInput.placeholder = 'Subject Name';
+      const totalMarksInput = document.createElement('input'); totalMarksInput.type = 'number'; totalMarksInput.placeholder = 'Total Marks';
+      const removeBtn = document.createElement('button'); removeBtn.textContent = '×'; removeBtn.className = 'btn danger';
+      removeBtn.addEventListener('click', () => { rowDiv.remove(); updatePreview(); });
+
+      // styling small widths
+      colSel.style.minWidth = '170px';
+      subjNameInput.style.minWidth = '120px';
+      totalMarksInput.style.width = '90px';
+
+      rowDiv.appendChild(colSel);
+      rowDiv.appendChild(subjNameInput);
+      rowDiv.appendChild(totalMarksInput);
+      rowDiv.appendChild(removeBtn);
+      subjectsArea.appendChild(rowDiv);
+    });
+
+    function updatePreview(){
+      if (!excelData || !excelData.length) {
+        previewHeading.textContent = examNameInput.value || 'Exam';
+        previewMeta.textContent = '(upload sheet to preview students)';
+        previewSubjects.innerHTML = '';
+        rawMessage.textContent = '(upload sheet to see preview)';
+        return;
+      }
+
+      const student = excelData[currentIndex] || {};
+      const examName = examNameInput.value.trim() || "CHAPTERWISE EXAMINATION";
+      const studentName = nameColumnSelect.value ? (student[nameColumnSelect.value] || "Unknown") : "Unknown";
+
+      previewHeading.textContent = examName;
+      previewMeta.textContent = `Name: ${studentName}`;
+
+      previewSubjects.innerHTML = '';
+      let subjectsText = '';
+      const rows = subjectsArea.querySelectorAll('.subject-row');
+      rows.forEach(row => {
+        const col = row.querySelector('select').value;
+        const subjName = row.querySelector('input[type="text"]').value.trim();
+        const total = row.querySelector('input[type="number"]').value.trim();
+        if (col && subjName && total) {
+          const mark = typeof student[col] !== 'undefined' ? student[col] : '';
+          const line = `• ${subjName} - ${mark}/${total}`;
+          subjectsText += line + '\n';
+
+          const div = document.createElement('div');
+          div.className = 'subject-line';
+          div.innerHTML = `<span>${escapeHtml(subjName)}</span><span>${escapeHtml(String(mark))}/${escapeHtml(String(total))}</span>`;
+          previewSubjects.appendChild(div);
+        }
+      });
+
+      const message = `*${examName}*\n\nName: ${studentName}\n\n${subjectsText}`.trim();
+      rawMessage.textContent = message;
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (!excelData.length) return;
+      if (currentIndex > 0) { currentIndex--; updatePreview(); }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (!excelData.length) return;
+      if (currentIndex < excelData.length - 1) { currentIndex++; updatePreview(); }
+    });
+
+    sendWhatsappBtn.addEventListener('click', () => {
+      if (!excelData.length) { alert('Upload sheet first'); return; }
+      const st = excelData[currentIndex] || {};
+      const phone = phoneColumnSelect.value ? (st[phoneColumnSelect.value] || "") : "";
+      if (!phone) { alert('No phone number found for this student. Use Copy Text instead.'); return; }
+      const msg = encodeURIComponent(rawMessage.textContent);
+      window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+    });
+
+    copyTextBtn.addEventListener('click', () => {
+      if (!excelData.length) { alert('Upload sheet first'); return; }
+      navigator.clipboard.writeText(rawMessage.textContent).catch(err => {
+        console.error('copy failed', err);
+        alert('Copy failed — check clipboard permissions.');
+      });
+    });
+
+    examNameInput.addEventListener('input', updatePreview);
+    subjectsArea.addEventListener('input', updatePreview);
+    nameColumnSelect.addEventListener('change', () => { updateStudentList(); updatePreview(); });
+    phoneColumnSelect.addEventListener('change', () => { updateStudentList(); updatePreview(); });
+
+    function updateStudentList(){
+      studentList.innerHTML = '';
+      if (!excelData || !excelData.length) return;
+      const max = Math.min(20, excelData.length);
+      for (let i = 0; i < max; i++){
+        const r = excelData[i];
+        const nm = nameColumnSelect.value ? (r[nameColumnSelect.value] || '(no name)') : '(choose name column)';
+        const ph = phoneColumnSelect.value ? (r[phoneColumnSelect.value] || '') : '';
+        const div = document.createElement('div');
+        div.innerHTML = `<strong>${i+1}.</strong> ${escapeHtml(String(nm))}${ph ? ' — ' + escapeHtml(String(ph)) : ''}`;
+        studentList.appendChild(div);
+      }
+    }
+
+    function escapeHtml(str){
+      return String(str).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+    }
+
+  })();
+  </script>
 </body>
 </html>
