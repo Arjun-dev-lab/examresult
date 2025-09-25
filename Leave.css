@@ -1,0 +1,143 @@
+:root {
+    --accent: #2563eb;
+    --muted: #6b7280;
+    --bg: #f3f6fb;
+    --card: #fff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Inter, system-ui, Arial, sans-serif;
+    background: var(--bg);
+    color: #0f172a;
+}
+
+h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+}
+
+.controls, .columns, .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.controls > div, .columns > div {
+    flex: 1;
+    min-width: 180px;
+}
+
+label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+input[type="text"], input[type="number"], input[type="date"], select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #e6eefc;
+    font-size: 14px;
+    background: #fbfdff;
+}
+
+input[type="file"] {
+    font-size: 14px;
+}
+
+button {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+}
+
+button.secondary {
+    background: #fff;
+    border: 1px solid #e6eefc;
+    color: var(--accent);
+}
+
+button.danger {
+    background: #ef4444;
+}
+
+button.positive {
+    background: #16a34a;
+}
+
+.preview table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+}
+
+.preview td, .preview th {
+    padding: 6px 8px;
+    border: 1px solid #eaeaea;
+    text-align: left;
+}
+
+.headerRow {
+    background: #f9fafb;
+    font-weight: bold;
+}
+
+.selectedHeader {
+    background: #dbeafe;
+    font-weight: bold;
+}
+
+.student-list {
+    margin-top: 12px;
+}
+
+.student-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    box-shadow: 0 4px 12px rgba(2, 6, 23, 0.05);
+}
+
+.student-item .left {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.student-item .small {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.note, .muted-note {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+}
+
+@media (max-width: 920px) {
+    .controls > div, .columns > div {
+        min-width: 100%;
+    }
+    .actions {
+        flex-direction: column;
+        gap: 6px;
+    }
+}
