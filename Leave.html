@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Student Leave — Excel WhatsApp Sender</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- SheetJS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<link rel="stylesheet" href="leave.css">
+
+</head>
+<body>
+
+<h2>Student Leave WhatsApp Sender</h2>
+
+<div class="controls">
+  <div>
+    <label>Excel File</label>
+    <input type="file" id="fileInput" accept=".xlsx,.xls"/>
+  </div>
+  <div>
+    <label style="visibility:hidden">placeholder</label>
+    <button id="autoDetectBtn" disabled>🔎 Auto-detect Header</button>
+  </div>
+  <div>
+    <label style="visibility:hidden">placeholder</label>
+    <button id="clearHeaderBtn" disabled>Clear Header</button>
+  </div>
+</div>
+
+<div id="preview"></div>
+
+<div class="columns">
+  <div>
+    <label>Name Column</label>
+    <select id="nameColumn"></select>
+  </div>
+  <div>
+    <label>Phone Column</label>
+    <select id="phoneColumn"></select>
+  </div>
+  <div>
+    <label>Gender</label>
+    <select id="genderSelect">
+      <option value="son">son</option>
+      <option value="daughter">daughter</option>
+    </select>
+  </div>
+  <div>
+    <label>Date</label>
+    <input type="date" id="leaveDate"/>
+  </div>
+</div>
+
+<div class="actions">
+  <button id="refreshListBtn" disabled>Load Student List</button>
+</div>
+
+<div class="note">Click a preview row to mark header or use auto-detect. Refresh student list to view all students.</div>
+
+<div class="student-list" id="studentList"></div>
+
+<script>
+let sheetData=[], headerRowIndex=null;
+const fileInput = document.getElementById('fileInput');
+const previewDiv = document.getElementById('preview');
+const autoDetectBtn = document.getElementById('autoDetectBtn');
+const clearHeaderBtn = document.getElementById('clearHeaderBtn');
+const nameColumnSelect = document.getElementById('nameColumn');
+const phoneColumnSelect = document.getElementById('phoneColumn');
+const refreshListBtn = document.getElementById('refreshListBtn');
+const studentList = document.getElementById('studentList');
+const countryCodeInput = document.getElementById('countryCode');
+const selectAllBtn = document.getElementById('selectAllBtn');
+const deselectAllBtn = document.getElementById('deselectAllBtn');
+const openSelectedBtn = document.getElementById('openSelectedBtn');
+const genderSelect = document.getElementById('genderSelect');
+const leaveDate = document.getElementById('leaveDate');
+
+fileInput.addEventListener('change', e=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = evt=>{
+    const data = new Uint8Array(evt.target.result);
+    const wb = XLSX.read(data,{type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    sheetData = XLSX.utils.sheet_to_json(ws,{header:1});
+    headerRowIndex=null;
+    renderPreview();
+    autoDetectBtn.disabled=false;
+    clearHeaderBtn.disabled=true;
+    refreshColumnSelectors();
+    refreshListBtn.disabled=false;
+  };
+  reader.readAsArrayBuffer(f);
+});
+
+// Preview Table
+function renderPreview(){
+  if(!sheetData.length){ previewDiv.innerHTML='<div style="padding:12px;color:#666">Upload Excel</div>'; return; }
+  const rowsToShow = Math.min(5, sheetData.length);
+  let html='<table><tbody>';
+  for(let r=0;r<rowsToShow;r++){
+    const row = sheetData[r]||[];
+    const trClass = (r===headerRowIndex)?'selectedHeader':'headerRow';
+    html+=`<tr data-row="${r}" class="${trClass}">`;
+    for(let c=0;c<Math.max(1,row.length);c++){
+      html+=`<td>${escapeHtml(row[c]||'')}</td>`;
+    }
+    html+=`<td style="border-left:1px solid #eee;background:#fafafa;text-align:right;"><button class="useHeaderBtn" data-row="${r}">Use as header</button></td>`;
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  previewDiv.innerHTML=html;
+
+  previewDiv.querySelectorAll('.useHeaderBtn').forEach(btn=>{
+    btn.addEventListener('click',ev=>{
+      headerRowIndex=Number(btn.dataset.row);
+      clearHeaderBtn.disabled=false;
+      refreshColumnSelectors();
+      renderPreview();
+      ev.stopPropagation();
+    });
+  });
+  previewDiv.querySelectorAll('tr[data-row]').forEach(tr=>{
+    tr.addEventListener('click',()=>{ headerRowIndex=Number(tr.dataset.row); clearHeaderBtn.disabled=false; refreshColumnSelectors(); renderPreview(); });
+  });
+}
+
+// Auto-detect
+autoDetectBtn.addEventListener('click',()=>{
+  if(!sheetData.length) return;
+  let best={index:0,score:-1};
+  const nameKeys=['name','student','full name','child'], phoneKeys=['phone','mobile','contact'];
+  for(let r=0;r<Math.min(12,sheetData.length);r++){
+    const row = sheetData[r].map(c=>String(c||'').toLowerCase());
+    let score=0;
+    row.forEach(cell=>{ nameKeys.forEach(k=>cell.includes(k)&&score++); phoneKeys.forEach(k=>cell.includes(k)&&score++); });
+    if(score>best.score) best={index:r,score};
+  }
+  headerRowIndex=best.index;
+  clearHeaderBtn.disabled=false;
+  refreshColumnSelectors();
+  renderPreview();
+});
+
+// Clear header
+clearHeaderBtn.addEventListener('click',()=>{ headerRowIndex=null; clearHeaderBtn.disabled=true; refreshColumnSelectors(); renderPreview(); });
+
+// Column selectors
+function refreshColumnSelectors(){
+  nameColumnSelect.innerHTML=''; phoneColumnSelect.innerHTML='';
+  if(!sheetData.length) return;
+  let cols=[];
+  if(headerRowIndex!==null && sheetData[headerRowIndex]){
+    sheetData[headerRowIndex].forEach((c,i)=>cols.push({idx:i,label:c||`Col ${colLetter(i)}`}));
+  } else {
+    let maxCols=Math.max(...sheetData.slice(0,20).map(r=>r.length));
+    for(let i=0;i<maxCols;i++) cols.push({idx:i,label:`Col ${colLetter(i)}`});
+  }
+  cols.forEach(c=>{ const opt=document.createElement('option'); opt.value=c.idx; opt.textContent=c.label; nameColumnSelect.append(opt); });
+  cols.forEach(c=>{ const opt=document.createElement('option'); opt.value=c.idx; opt.textContent=c.label; phoneColumnSelect.append(opt); });
+  tryAutoSelectColumns();
+}
+
+function tryAutoSelectColumns(){
+  if(!sheetData.length) return;
+  const testRow=headerRowIndex!==null?sheetData[headerRowIndex]:sheetData[0];
+  let nameIdx=-1, phoneIdx=-1;
+  testRow.forEach((cell,c)=>{
+    const txt=String(cell||'').toLowerCase();
+    if(nameIdx===-1 && /name|student|child/.test(txt)) nameIdx=c;
+    if(phoneIdx===-1 && /phone|mobile|contact/.test(txt)) phoneIdx=c;
+  });
+  if(nameIdx!==-1) nameColumnSelect.value=nameIdx;
+  if(phoneIdx!==-1) phoneColumnSelect.value=phoneIdx;
+}
+
+// Generate Student List
+refreshListBtn.addEventListener('click',()=>{ generateStudentList(); });
+
+function generateStudentList(){
+  studentList.innerHTML='';
+  if(!sheetData.length) return;
+  const nameCol=Number(nameColumnSelect.value), phoneCol=Number(phoneColumnSelect.value);
+  const startRow=headerRowIndex!==null?headerRowIndex+1:0;
+  const students=[];
+  sheetData.slice(startRow).forEach(r=>{
+    let name=(r[nameCol]||'').toString().trim();
+    let phone=(r[phoneCol]||'').toString().replace(/[^\d]/g,'').trim();
+    if(!name||!phone) return;
+    const cc=(countryCodeInput.value||'').replace(/\D/g,'');
+    if(cc && phone.startsWith('0')) phone=cc+phone.replace(/^0+/,'');
+    students.push({name,phone});
+  });
+  students.sort((a,b)=>a.name.localeCompare(b.name));
+  if(!students.length){ studentList.innerHTML='<div style="padding:12px;color:#666">No students found.</div>'; selectAllBtn.disabled=deselectAllBtn.disabled=openSelectedBtn.disabled=true; return; }
+  const container=document.createElement('div'); container.id='studentsContainer';
+  students.forEach((s,idx)=>{
+    const row=document.createElement('div'); row.className='student-item';
+    row.innerHTML=`<div class="left"><input type="checkbox" class="chk" data-idx="${idx}"/><div style="min-width:180px; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.name)}</div><div class="small">${escapeHtml(s.phone)}</div></div><div><button class="sendBtn" data-idx="${idx}">Send</button></div>`;
+    container.appendChild(row);
+    row.querySelector('.sendBtn').addEventListener('click',()=>{ singleSend(s); });
+  });
+  studentList.appendChild(container);
+  studentList._students=students;
+  selectAllBtn.disabled=deselectAllBtn.disabled=openSelectedBtn.disabled=false;
+}
+
+// Single Send
+function singleSend(s){
+  if(!leaveDate.value){ alert('Select a date'); return; }
+  const gender=genderSelect.value;
+  const d=leaveDate.value.split('-'); // yyyy-mm-dd
+  const dateStr = String(d[2]).padStart(2,'0') + '/' + String(d[1]).padStart(2,'0') + '/' + d[0]; // dd/mm/yyyy
+  const msg=`Dear Parent,\n\nThis is to inform you that your ${gender} '${s.name}', was absent from school on ${dateStr}.\n\nThank you.\n\nXylem Integrated School`;
+  window.open(`https://wa.me/${s.phone}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+
+// Send selected
+openSelectedBtn.addEventListener('click',()=>{
+  const checked=Array.from(document.querySelectorAll('.chk')).filter(c=>c.checked);
+  if(!checked.length){ alert('Select at least one'); return; }
+  const students=studentList._students||[];
+  const d=leaveDate.value.split('-'); if(!d[0]){ alert('Select date'); return; }
+  const dateStr = String(d[2]).padStart(2,'0') + '/' + String(d[1]).padStart(2,'0') + '/' + d[0];
+
+  if(!confirm(`Open ${checked.length} WhatsApp tabs?`)) return;
+  checked.forEach(c=>{
+    const s=students[Number(c.dataset.idx)];
+    const gender=genderSelect.value;
+    const msg=`Dear Parent,\n\nThis is to inform you that your ${gender} '${s.name}', was absent from school on ${dateStr}.\n\nThank you.\n\nXylem Integrated School`;
+    window.open(`https://wa.me/${s.phone}?text=${encodeURIComponent(msg)}`,'_blank');
+  });
+});
+
+// Select/Deselect all
+selectAllBtn.addEventListener('click',()=>document.querySelectorAll('.chk').forEach(c=>c.checked=true));
+deselectAllBtn.addEventListener('click',()=>document.querySelectorAll('.chk').forEach(c=>c.checked=false));
+
+function colLetter(n){ let s=''; n++; while(n>0){ const mod=(n-1)%26; s=String.fromCharCode(65+mod)+s; n=Math.floor((n-1)/26); } return s; }
+function escapeHtml(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+
+renderPreview();
+</script>
+
+</body>
+</html>
