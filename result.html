@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Student Result Search</title>
+</head>
+<body>
+
+<h2>Student Result Search</h2>
+
+<input type="file" id="file"><br><br>
+
+<input type="text" id="search" placeholder="Enter Name or Roll No">
+<button onclick="findStudent()">Search</button>
+
+<br><br>
+
+<div id="result"></div>
+
+<!-- XLSX -->
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+let data = [];
+
+// Load Excel (FIXED METHOD)
+document.getElementById("file").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+        const arrayBuffer = event.target.result;
+        const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        data = XLSX.utils.sheet_to_json(sheet);
+
+        console.log("Loaded Data:", data);
+        alert("Excel Loaded Successfully ✅");
+    };
+
+    reader.readAsArrayBuffer(file); // ✅ FIXED
+});
+
+// Search
+function findStudent() {
+    const input = document.getElementById("search").value.toLowerCase().trim();
+
+    const results = data.filter(s => {
+        return Object.values(s).join(" ").toLowerCase().includes(input);
+    });
+
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = "";
+
+    if(results.length === 0){
+        resultDiv.innerHTML = "Student not found ❌";
+        return;
+    }
+
+    results.forEach((student, index) => {
+
+        const name = student["Name"] || student["NAME"] || "";
+        const roll = student["Roll No"] || student["ROLL NO"] || "";
+        const marks = student["Marks"] || student["Total"] || student["MARKS"] || "";
+        const percent = student["%"] || student["PERCENTAGE"] || "";
+        const rank = student["Rank"] || student["RANK"] || "";
+
+        const text =
+`INTEGRATED CWE +2 CHEMISTRY
+
+Name: ${name}
+Roll No: ${roll}
+Marks: ${marks}
+Percentage: ${percent}
+Rank: ${rank}`;
+
+        const box = document.createElement("div");
+
+        box.innerHTML = `
+            <pre id="text${index}">${text}</pre>
+            <button onclick="copyText(${index})">Copy</button>
+            <hr>
+        `;
+
+        resultDiv.appendChild(box);
+    });
+}
+
+// Copy
+function copyText(index){
+const text = document.getElementById("text" + index).innerText;
+navigator.clipboard.writeText(text);
+alert("Copied ✅");
+} </script>
+
+</body>
+</html>
